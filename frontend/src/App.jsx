@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
 import Balance from "./components/Balance";
-import TransferForm from "./components/TransferForm";
+import TransferForm from "./components/ApproveTransferForm";
 import tokenAbi from "./contracts/MyToken.json";
 
 const MYTOKEN_ADDRESS = import.meta.env.VITE_MYTOKEN_ADDRESS;
@@ -46,7 +46,7 @@ function App() {
             <Balance contract={contract} account={account} darkMode />
 
             <div className="border-t border-gray-700 pt-6">
-              <TransferForm contract={contract} darkMode />
+              <TransferForm contract={contract} account={account} darkMode />
             </div>
           </div>
         )}

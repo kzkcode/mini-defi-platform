@@ -13,6 +13,12 @@ export default function ConnectWallet({ onConnect, darkMode }) {
     onConnect(accounts[0]);
   }
 
+  function shortenAddress(address) {
+      if (!address) return "";
+      const len = 10;
+      return `${address.slice(0, len)}...${address.slice(-len)}`;
+  }
+
   return (
     <div className="w-full flex flex-col items-start gap-2">
       {/* Connect MetaMask ボタン */}
@@ -37,7 +43,7 @@ export default function ConnectWallet({ onConnect, darkMode }) {
           }`}
         >
           <span className="font-medium mr-1">Connected:</span>
-          <span className="font-mono">{addr}</span>
+          <span className="font-mono">{shortenAddress(addr)}</span>
         </div>
       )}
     </div>
