@@ -13,12 +13,12 @@
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.2.3",
     "chai": "^6.2.2",
+    "ethers": "^5.8.0",
     "hardhat": "^2.27.0",
     "mocha": "^11.7.6"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",
-    "dotenv": "^17.4.2",
-    "ethers": "^5.8.0"
+    "dotenv": "^17.4.2"
   }
 }
