@@ -23,4 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-src/contracts/MyToken.json
+src/contracts/*.json

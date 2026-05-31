@@ -1,31 +1,41 @@
-# MyToken DApp (ERC-20)
+# MyToken DApp (ERC-20 + Staking)
 
-MyToken DApp is a simple ERC-20 Web3 application that allows users to connect MetaMask, check balances, and transfer tokens on Sepolia testnet.  
-It combines Solidity + Hardhat for the smart contract and React + Ethers.js for the frontend.
+MyToken DApp is a full-stack Web3 learning project built with Solidity, Hardhat,
+React, and Ethers.js, deployed on the Sepolia testnet.
 
 ## Project Overview
 
-This full-stack Web3 learning DApp implements an ERC-20 token (MyToken / MTK) and a React frontend.
-All core features (wallet connection, balance display, token transfer, approve, transferFrom) have been implemented.
+This full-stack Web3 learning DApp implements:
+
+- An original ERC-20 token (MyToken / MTK)
+- A staking smart contract that allows users to stake MTK and earn rewards over time
+- A React frontend connected to MetaMask for both token and staking interactions
 
 ## Implemented Features
 
-### 1. Smart Contract (Solidity / Hardhat)
+### 1. Smart Contracts (Solidity / Hardhat)
 
-- Original ERC-20 token: MyToken (MTK)
-- Compiled and deployed locally using Hardhat
+#### ERC-20 Token (MyToken / MTK)
+- Standard ERC-20 implementation using OpenZeppelin
+- Token transfer, approve, transferFrom
 - Deployed to Sepolia testnet
-- Utilizes OpenZeppelin library
+
+#### Staking Contract
+- Stake and withdraw MTK tokens
+- Claim time-based rewards
+- Reward calculation using `block.timestamp`
+- Configurable reward rate
+- Total staked amount tracking
 
 ### 2. Frontend (React + Ethers.js)
 
 - MetaMask wallet connection
-- Display of current wallet address
-- Fetching MyToken balance
-- Token transfer (transfer)
-- Approve a spender (approve)
-- Transfer tokens from an approved account (transferFrom)
-- Simple UI built with React + TailwindCSS
+- Token balance display
+- Token transfer / approve / transferFrom UI
+- Staking UI (deposit, withdraw, claim)
+- Real-time earned reward display
+- Reward rate and APR display
+- Automatic UI refresh after transactions
 
 ## Tech Stack
 
@@ -46,7 +56,10 @@ All core features (wallet connection, balance display, token transfer, approve, 
 1. Smart Contract Setup
 ```bash
 npm install
+# Deploy ERC-20 token first
 npx hardhat run scripts/deploy.js --network sepolia
+# Deploy staking contract with token address
+npx hardhat run scripts/deploy_staking.js --network sepolia
 ```
 
 2. Frontend Setup
@@ -62,3 +75,5 @@ npm run dev
 - Implementing Web3 UI connected to MetaMask
 - Using Ethers.js to fetch balances and send tokens
 - Deploying smart contracts on a testnet using Hardhat
+- Implementing staking logic and reward distribution
+- Handling time-based rewards and on-chain state updates
