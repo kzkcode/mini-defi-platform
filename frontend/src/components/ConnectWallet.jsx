@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { shortenAddress } from "../utils/address";
 
 export default function ConnectWallet({ onConnect, darkMode }) {
   const [addr, setAddr] = useState(null);
 
   async function connect() {
-    if (!window.ethereum) return alert("MetaMask が必要です");
+    if (!window.ethereum) return alert("MetaMask is required");
 
+    // Request account access
     await window.ethereum.request({ method: "eth_requestAccounts" });
     const accounts = await window.ethereum.request({ method: "eth_accounts" });
 
@@ -13,15 +15,9 @@ export default function ConnectWallet({ onConnect, darkMode }) {
     onConnect(accounts[0]);
   }
 
-  function shortenAddress(address) {
-      if (!address) return "";
-      const len = 10;
-      return `${address.slice(0, len)}...${address.slice(-len)}`;
-  }
-
   return (
     <div className="w-full flex flex-col items-start gap-2">
-      {/* Connect MetaMask ボタン */}
+      {/* Connect MetaMask button */}
       <button
         onClick={connect}
         className={`font-semibold px-4 py-2 rounded-xl shadow-md whitespace-nowrap transition ${
@@ -33,7 +29,7 @@ export default function ConnectWallet({ onConnect, darkMode }) {
         Connect MetaMask
       </button>
 
-      {/* Connected アドレス */}
+      {/* Display connected address */}
       {addr && (
         <div
           className={`px-3 py-2 rounded-xl border inline-flex items-center whitespace-nowrap ${

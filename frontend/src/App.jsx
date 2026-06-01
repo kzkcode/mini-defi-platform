@@ -4,12 +4,10 @@ import ConnectWallet from "./components/ConnectWallet";
 import Balance from "./components/Balance";
 import TransferForm from "./components/ApproveTransferForm";
 import Staking from "./components/Staking";
+import AMM from "./components/AMM";
 import tokenAbi from "./contracts/MyToken.json";
 
-const MYTOKEN_ADDRESS = import.meta.env.VITE_MYTOKEN_ADDRESS;
-console.log("MYTOKEN_ADDRESS:", MYTOKEN_ADDRESS);
-console.log(tokenAbi);
-console.log(tokenAbi.abi);
+const TOKEN_ADDRESS = import.meta.env.VITE_MYTOKEN_ADDRESS;
 
 function App() {
   const [provider] = useState(() =>
@@ -26,7 +24,7 @@ function App() {
     const signer = await provider.getSigner();
     setAccount(addr);
 
-    const c = new ethers.Contract(MYTOKEN_ADDRESS, tokenAbi.abi, signer);
+    const c = new ethers.Contract(TOKEN_ADDRESS, tokenAbi.abi, signer);
     setContract(c);
   }
 
@@ -59,8 +57,16 @@ function App() {
               <Staking 
                 provider={provider} 
                 account={account} 
-                tokenAddress={MYTOKEN_ADDRESS} 
-                darkMode 
+                tokenAddress={TOKEN_ADDRESS}
+              />
+            </div>
+
+            {/* AMM UI */}
+            <div className="border-t border-gray-700 pt-6">
+              <AMM
+                provider={provider}
+                account={account}
+                tokenAddress={TOKEN_ADDRESS}
               />
             </div>
 

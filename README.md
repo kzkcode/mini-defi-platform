@@ -1,4 +1,4 @@
-# MyToken DApp (ERC-20 + Staking)
+# MyToken DApp — A Web3 Project with ERC-20, Staking, and AMM
 
 MyToken DApp is a full-stack Web3 learning project built with Solidity, Hardhat,
 React, and Ethers.js, deployed on the Sepolia testnet.
@@ -9,7 +9,8 @@ This full-stack Web3 learning DApp implements:
 
 - An original ERC-20 token (MyToken / MTK)
 - A staking smart contract that allows users to stake MTK and earn rewards over time
-- A React frontend connected to MetaMask for both token and staking interactions
+- An AMM (Automated Market Maker) smart contract for token ↔ ETH swaps and liquidity provision
+- A React frontend connected to MetaMask for all interactions
 
 ## Implemented Features
 
@@ -22,10 +23,15 @@ This full-stack Web3 learning DApp implements:
 
 #### Staking Contract
 - Stake and withdraw MTK tokens
-- Claim time-based rewards
-- Reward calculation using `block.timestamp`
-- Configurable reward rate
+- Claim time-based rewards with real-time earned display
+- Reward rate and APR(Annual Percentage Rate) calculation
 - Total staked amount tracking
+
+#### AMM Contract
+- Swap MTK ↔ ETH at a constant product (x * y = k) formula
+- Add and remove liquidity
+- Track pool reserves for token and ETH
+- Users receive LP tokens representing their share of the pool
 
 ### 2. Frontend (React + Ethers.js)
 
@@ -34,8 +40,9 @@ This full-stack Web3 learning DApp implements:
 - Token transfer / approve / transferFrom UI
 - Staking UI (deposit, withdraw, claim)
 - Real-time earned reward display
-- Reward rate and APR display
+- Reward rate and APR(Annual Percentage Rate) display
 - Automatic UI refresh after transactions
+- AMM UI for swapping, removing liquidity, and viewing pool reserves
 
 ## Tech Stack
 
@@ -57,9 +64,13 @@ This full-stack Web3 learning DApp implements:
 ```bash
 npm install
 # Deploy ERC-20 token first
-npx hardhat run scripts/deploy.js --network sepolia
+npx hardhat run scripts/deploy_token.js --network sepolia
 # Deploy staking contract with token address
 npx hardhat run scripts/deploy_staking.js --network sepolia
+# Deploy AMM contract with token address
+npx hardhat run scripts/deploy_amm.js --network sepolia
+# Add initial liquidity to AMM pool (required for swap/removeLiquidity)
+npx hardhat run scripts/add_liquidity.js --network sepolia
 ```
 
 2. Frontend Setup
@@ -77,3 +88,6 @@ npm run dev
 - Deploying smart contracts on a testnet using Hardhat
 - Implementing staking logic and reward distribution
 - Handling time-based rewards and on-chain state updates
+- Understanding and implementing AMM (constant product formula)
+- Managing liquidity, LP tokens, and swap logic
+- Integrating multiple smart contracts in a single DApp

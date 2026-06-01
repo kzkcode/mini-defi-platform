@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ethers } from "ethers";
+import { shortenAddress } from "../utils/address";
 
 export default function TokenForm({ contract, account, darkMode }) {
   const [recipient, setRecipient] = useState("");     
@@ -161,7 +162,16 @@ export default function TokenForm({ contract, account, darkMode }) {
       <h2 className="text-lg font-semibold mt-6 mb-4">TransferFrom</h2>
       <label className="block mb-3">
         <span className="text-sm">Sender Address (from)</span>
-        <input type="text" value={account || ""} readOnly className={`mt-1 w-full px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 ${darkMode ? "bg-gray-800 text-gray-100 border-gray-600 focus:ring-indigo-500" : "bg-white text-gray-900 border-gray-300 focus:ring-indigo-500"}`} />
+        <input
+          type="text"
+          value={shortenAddress(account)}
+          readOnly
+          className={`mt-1 w-full px-3 py-2 rounded-xl border font-mono ${
+            darkMode
+              ? "bg-gray-800 text-gray-100 border-gray-600"
+              : "bg-gray-100 text-gray-700 border-gray-300"
+          }`}
+        />
       </label>
       <label className="block mb-3">
         <span className="text-sm">Recipient Address (to)</span>

@@ -1,28 +1,22 @@
+require("dotenv").config();
 const { ethers } = require("hardhat");
 
 async function main() {
-  const Token = await ethers.getContractFactory("MyToken");
-  const token = await Token.deploy(
-    ethers.utils.parseEther("1000000")
-  );
-  await token.deployed();
-
-  console.log("Token deployed to:", token.address);
+  const tokenAddress = process.env.MYTOKEN_ADDRESS;
 
   const Staking = await ethers.getContractFactory("Staking");
-  const staking = await Staking.deploy(token.address);
+  const staking = await Staking.deploy(tokenAddress);
   await staking.deployed();
 
   console.log("Staking deployed to:", staking.address);
 
+  const token = await ethers.getContractAt("MyToken", tokenAddress);
   await token.transfer(
     staking.address,
-    ethers.utils.parseEther("500000")
+    ethers.utils.parseUnits("500000", 18)
   );
+
   console.log("Reward tokens funded.");
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main().catch(console.error);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import stakingAbi from "../contracts/Staking.json";
 import tokenAbi from "../contracts/MyToken.json";
+import { shortenAddress } from "../utils/address";
 
 const STAKING_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
@@ -131,7 +132,7 @@ export default function Staking({ provider, account, tokenAddress }) {
 
   return (
     <div className="p-6 bg-gray-700 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold text-white mb-4">Staking DApp</h2>
+      <h2 className="text-2xl font-bold text-white mb-4">Staking</h2>
 
       {!account && <p className="text-white mb-4">Please connect your wallet</p>}
 
@@ -139,7 +140,12 @@ export default function Staking({ provider, account, tokenAddress }) {
 
       {account && staking && token && (
         <>
-          <p className="text-gray-300 mb-2">Connected: {account}</p>
+          <p className="text-gray-300 mb-2">
+            Connected:{" "}
+            <span className="font-mono text-white">
+              {shortenAddress(account)}
+            </span>
+          </p>
 
           <h3 className="text-xl font-semibold text-white mt-4 mb-2">
             Your Staking Info
