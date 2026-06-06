@@ -1,47 +1,82 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { shortenAddress } from "../../utils/address";
 
-export default function WalletConnector({ onConnect, darkMode }) {
+export default function WalletConnector({ onConnect }) {
   const [addr, setAddr] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function check() {
+      if (!window.ethereum) return;
+
+      const accounts = await window.ethereum.request({
+        method: "eth_accounts",
+      });
+
+      if (accounts.length > 0) {
+        setAddr(accounts[0]);
+        onConnect?.(accounts[0]);
+      }
+    }
+
+    check();
+  }, [onConnect]);
 
   async function connect() {
-    if (!window.ethereum) return alert("MetaMask is required");
+    if (!window.ethereum) {
+      alert("MetaMask is required");
+      return;
+    }
 
-    // Request account access
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    const accounts = await window.ethereum.request({ method: "eth_accounts" });
+    try {
+      setLoading(true);
 
-    setAddr(accounts[0]);
-    onConnect(accounts[0]);
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      const account = accounts?.[0];
+      if (!account) return;
+
+      setAddr(account);
+      onConnect?.(account);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="w-full flex flex-col items-start gap-2">
-      {/* Connect MetaMask button */}
-      <button
-        onClick={connect}
-        className={`font-semibold px-4 py-2 rounded-xl shadow-md whitespace-nowrap transition ${
-          darkMode
-            ? "bg-blue-600 text-white hover:bg-blue-500"
-            : "bg-blue-600 text-white hover:bg-blue-700"
-        }`}
-      >
-        Connect MetaMask
-      </button>
+    <div className="shrink-0">
 
-      {/* Display connected address */}
-      {addr && (
-        <div
-          className={`px-3 py-2 rounded-xl border inline-flex items-center whitespace-nowrap ${
-            darkMode
-              ? "bg-gray-700 border-gray-600 text-gray-100"
-              : "bg-gray-100 border-gray-300 text-gray-700"
-          }`}
+      {/* 未接続 */}
+      {!addr ? (
+        <button
+          onClick={connect}
+          disabled={loading}
+          className="
+            px-3 py-1.5 text-sm rounded-lg
+            bg-blue-600/80 hover:bg-blue-500
+            text-white transition
+            disabled:opacity-50
+          "
         >
-          <span className="font-medium mr-1">Connected:</span>
-          <span className="font-mono">{shortenAddress(addr)}</span>
-        </div>
+          {loading ? "Connecting..." : "Connect MetaMask"}
+        </button>
+      ) : (
+        /* 接続済 */
+        <button
+          onClick={connect}
+          className="
+            px-3 py-1.5 text-xs rounded-lg
+            bg-white/5 border border-white/10
+            text-gray-300 font-mono
+            hover:bg-white/10 transition
+          "
+        >
+          {shortenAddress(addr)} ▼
+        </button>
       )}
+
     </div>
   );
 }
