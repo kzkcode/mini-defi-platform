@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import WalletConnector from "./WalletConnector";
 
-export default function Header() {
+export default function Header({ onConnect }) {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0B0F17]/70 backdrop-blur">
 
@@ -13,7 +13,7 @@ export default function Header() {
             MyDeFi
           </h1>
 
-          <WalletConnector />
+          <WalletConnector onConnect={onConnect} />
         </div>
 
         {/* 下段 */}
