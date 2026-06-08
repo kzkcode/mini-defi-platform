@@ -5,8 +5,10 @@ import Layout from "./components/common/Layout";
 import AppRoutes from "./app/routes";
 
 import tokenAbi from "./contracts/MyToken.json";
+import stakingAbi from "./contracts/Staking.json";
 
 const TOKEN_ADDRESS = import.meta.env.VITE_MYTOKEN_ADDRESS;
+const STAKING_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
 function App() {
   const provider = useMemo(() => {
@@ -23,7 +25,7 @@ function App() {
     setAccount(accounts[0]);
   }
 
-  // READ専用
+  // ERC20（MyToken）READ
   const contract = useMemo(() => {
     if (!provider) return null;
 
@@ -34,7 +36,18 @@ function App() {
     );
   }, [provider]);
 
-  // WRITE専用
+  // Staking READ
+  const stakingContract = useMemo(() => {
+    if (!provider) return null;
+
+    return new ethers.Contract(
+      STAKING_ADDRESS,
+      stakingAbi.abi,
+      provider
+    );
+  }, [provider]);
+
+  // ERC20 WRITE
   const signerContract = useMemo(() => {
     if (!provider || !account) return null;
 
@@ -51,12 +64,14 @@ function App() {
     <Layout
       account={account}
       contract={contract}
+      stakingContract={stakingContract}
       signerContract={signerContract}
       onConnect={handleConnect}
     >
       <AppRoutes
         account={account}
         contract={contract}
+        stakingContract={stakingContract}
         signerContract={signerContract}
       />
     </Layout>

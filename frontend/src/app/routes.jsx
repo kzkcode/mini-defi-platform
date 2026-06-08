@@ -8,16 +8,20 @@ import History from "../pages/History/History";
 export default function AppRoutes({
   account,
   contract,
+  stakingContract,
+  signerContract,
   provider,
 }) {
   return (
     <Routes>
+
       <Route
         path="/"
         element={
           <Dashboard
             account={account}
             contract={contract}
+            stakingContract={stakingContract}
           />
         }
       />
@@ -28,6 +32,8 @@ export default function AppRoutes({
           <Earn
             account={account}
             contract={contract}
+            stakingContract={stakingContract}
+            signerContract={signerContract}
           />
         }
       />
@@ -43,6 +49,7 @@ export default function AppRoutes({
       />
 
       <Route path="/history" element={<History />} />
+
     </Routes>
   );
 }

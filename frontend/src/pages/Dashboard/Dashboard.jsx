@@ -4,28 +4,51 @@ import { ethers } from "ethers";
 export default function Dashboard({
   account,
   contract,
+  stakingContract,
 }) {
   const [balance, setBalance] = useState("0");
+  const [staked, setStaked] = useState("0");
+  const [rewards, setRewards] = useState("0");
 
   useEffect(() => {
-    async function loadBalance() {
-      if (!contract || !account) return;
+    async function loadData() {
+      if (!contract || !stakingContract || !account) return;
 
       try {
+        // ======================
+        // Wallet Balance (ERC20)
+        // ======================
         const b = await contract.balanceOf(account);
-        
+
         setBalance(
-          Number(
-            ethers.formatUnits(b, 18)
-          ).toFixed(2)
+          Number(ethers.formatUnits(b, 18)).toFixed(2)
         );
+
+        // ======================
+        // Staked Amount
+        // ======================
+        const s = await stakingContract.balances(account);
+
+        setStaked(
+          Number(ethers.formatUnits(s, 18)).toFixed(2)
+        );
+
+        // ======================
+        // Pending Rewards
+        // ======================
+        const r = await stakingContract.earned(account);
+
+        setRewards(
+          Number(ethers.formatUnits(r, 18)).toFixed(2)
+        );
+
       } catch (err) {
         console.error(err);
       }
     }
 
-    loadBalance();
-  }, [contract, account]);
+    loadData();
+  }, [contract, stakingContract, account]);
 
   return (
     <div className="space-y-6">
@@ -49,8 +72,8 @@ export default function Dashboard({
 
         {[
           ["Wallet Balance", `${balance} MTK`],
-          ["Staked Amount", "300 MTK"],
-          ["Pending Rewards", "12.34 MTK"],
+          ["Staked Amount", `${staked} MTK`],
+          ["Pending Rewards", `${rewards} MTK`],
           ["LP Position Value", "428.60 MTK"],
         ].map(([title, value]) => (
           <div
