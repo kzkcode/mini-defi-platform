@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ethers } from "ethers";
 
 import Layout from "./components/common/Layout";
@@ -11,12 +11,13 @@ const TOKEN_ADDRESS = import.meta.env.VITE_MYTOKEN_ADDRESS;
 const STAKING_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
 function App() {
+  const [account, setAccount] = useState(null);
+  const [signer, setSigner] = useState(null);
+
   const provider = useMemo(() => {
     if (!window.ethereum) return null;
     return new ethers.BrowserProvider(window.ethereum);
   }, []);
-
-  const [account, setAccount] = useState(null);
 
   async function handleConnect() {
     if (!provider) return;
@@ -25,7 +26,14 @@ function App() {
     setAccount(accounts[0]);
   }
 
-  // ERC20（MyToken）READ
+  // signer取得
+  useEffect(() => {
+    if (!provider || !account) return;
+
+    provider.getSigner().then(setSigner);
+  }, [provider, account]);
+
+  // READ TOKEN
   const contract = useMemo(() => {
     if (!provider) return null;
 
@@ -36,7 +44,7 @@ function App() {
     );
   }, [provider]);
 
-  // Staking READ
+  // READ STAKING
   const stakingContract = useMemo(() => {
     if (!provider) return null;
 
@@ -47,32 +55,36 @@ function App() {
     );
   }, [provider]);
 
-  // ERC20 WRITE
+  // WRITE TOKEN
   const signerContract = useMemo(() => {
-    if (!provider || !account) return null;
-
-    const signer = provider.getSigner();
+    if (!signer) return null;
 
     return new ethers.Contract(
       TOKEN_ADDRESS,
       tokenAbi.abi,
       signer
     );
-  }, [provider, account]);
+  }, [signer]);
+
+  // WRITE STAKING
+  const signerStakingContract = useMemo(() => {
+    if (!signer) return null;
+
+    return new ethers.Contract(
+      STAKING_ADDRESS,
+      stakingAbi.abi,
+      signer
+    );
+  }, [signer]);
 
   return (
-    <Layout
-      account={account}
-      contract={contract}
-      stakingContract={stakingContract}
-      signerContract={signerContract}
-      onConnect={handleConnect}
-    >
+    <Layout account={account} onConnect={handleConnect}>
       <AppRoutes
         account={account}
         contract={contract}
         stakingContract={stakingContract}
         signerContract={signerContract}
+        signerStakingContract={signerStakingContract}
       />
     </Layout>
   );

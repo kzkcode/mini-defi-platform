@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ethers } from "ethers";
 
 export default function Earn({
   account,
-  stakingContract,
+  stakingContract,        // READ
+  stakingWriteContract,   // WRITE
   tokenContract,
 }) {
   const [amount, setAmount] = useState("");
@@ -14,21 +15,40 @@ export default function Earn({
   const [status, setStatus] = useState("");
 
   // ========================
-  // データ取得（effect内で完結）
+  // READデータ取得
   // ========================
+  const fetchData = useCallback(async () => {
+    if (!stakingContract || !account) return;
+
+    try {
+      const stakedValue = await stakingContract.balances(account);
+      const earnedValue = await stakingContract.earned(account);
+      const rateValue = await stakingContract.rewardRate();
+      const totalValue = await stakingContract.totalSupply();
+
+      setStaked(ethers.formatEther(stakedValue));
+      setEarned(ethers.formatEther(earnedValue));
+      setRewardRate(ethers.formatEther(rateValue));
+      setTotalStaked(ethers.formatEther(totalValue));
+
+    } catch (err) {
+      console.error("fetch error:", err);
+    }
+  }, [stakingContract, account]);
+
   useEffect(() => {
     if (!stakingContract || !account) return;
 
-    let isMounted = true;
+    let alive = true;
 
-    const fetchData = async () => {
+    const load = async () => {
       try {
         const stakedValue = await stakingContract.balances(account);
         const earnedValue = await stakingContract.earned(account);
         const rateValue = await stakingContract.rewardRate();
         const totalValue = await stakingContract.totalSupply();
 
-        if (!isMounted) return;
+        if (!alive) return;
 
         setStaked(ethers.formatEther(stakedValue));
         setEarned(ethers.formatEther(earnedValue));
@@ -39,98 +59,112 @@ export default function Earn({
       }
     };
 
-    // 初回ロード
-    fetchData();
+    // 初回ロード（OK）
+    load();
 
-    // 定期更新
-    const interval = setInterval(() => {
-      fetchData();
-    }, 5000);
+  // interval
+  const interval = setInterval(load, 5000);
 
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [stakingContract, account]);
+  return () => {
+    alive = false;
+    clearInterval(interval);
+  };
+}, [stakingContract, account]);
 
   // ========================
-  // stake
+  // STAKE
   // ========================
   const stake = async () => {
-    if (!stakingContract || !tokenContract || !amount) return;
-
     try {
+      console.log("stake clicked");
+
+      if (!stakingWriteContract || !tokenContract || !amount) {
+        console.log("missing deps", {
+          stakingWriteContract,
+          tokenContract,
+          amount,
+        });
+        return;
+      }
+
       const wei = ethers.parseEther(amount);
 
-      setStatus("Checking allowance...");
+      console.log("allowance check");
 
       const allowance = await tokenContract.allowance(
         account,
-        stakingContract.target
+        stakingWriteContract.target
       );
 
+      console.log("allowance:", allowance.toString());
+
       if (allowance < wei) {
-        setStatus("Approving token...");
+        console.log("approving...");
         const tx = await tokenContract.approve(
-          stakingContract.target,
+          stakingWriteContract.target,
           wei
         );
         await tx.wait();
       }
 
-      setStatus("Staking...");
+      console.log("staking...");
 
-      const tx = await stakingContract.deposit(wei);
+      const tx = await stakingWriteContract.deposit(wei);
+      console.log("tx sent:", tx.hash);
+
       await tx.wait();
 
-      setStatus("Staked successfully");
+      console.log("stake done");
+      setStatus("Success");
 
-      setAmount("");
-    } catch (err) {
-      console.error(err);
-      setStatus("Error occurred");
+    } catch (e) {
+      console.error("STAKE ERROR:", e);
+      setStatus("Stake failed");
     }
   };
 
   // ========================
-  // unstake
+  // UNSTAKE
   // ========================
   const unstake = async () => {
-    if (!stakingContract || !amount) return;
+    if (!stakingWriteContract || !amount) return;
 
     try {
       const wei = ethers.parseEther(amount);
 
       setStatus("Withdrawing...");
 
-      const tx = await stakingContract.withdraw(wei);
+      const tx = await stakingWriteContract.withdraw(wei);
       await tx.wait();
 
       setStatus("Withdraw complete");
-
       setAmount("");
+      fetchData();
+
     } catch (err) {
       console.error(err);
-      setStatus("Error occurred");
+      setStatus("Unstake failed");
     }
   };
 
   // ========================
-  // claim
+  // CLAIM
   // ========================
   const claim = async () => {
-    if (!stakingContract) return;
+    if (!stakingWriteContract) return;
 
     try {
       setStatus("Claiming rewards...");
 
-      const tx = await stakingContract.claimReward();
+      const tx = await stakingWriteContract.claimReward();
       await tx.wait();
 
       setStatus("Rewards claimed");
+      fetchData();
+
     } catch (err) {
       console.error(err);
-      setStatus("Error occurred");
+      setStatus("Claim failed");
     }
   };
 
@@ -163,24 +197,15 @@ export default function Earn({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <button
-          onClick={stake}
-          className="px-4 py-2 rounded-lg bg-green-500"
-        >
+        <button onClick={stake} className="px-4 py-2 rounded-lg bg-green-500">
           Stake
         </button>
 
-        <button
-          onClick={unstake}
-          className="px-4 py-2 rounded-lg bg-yellow-500"
-        >
+        <button onClick={unstake} className="px-4 py-2 rounded-lg bg-yellow-500">
           Unstake
         </button>
 
-        <button
-          onClick={claim}
-          className="px-4 py-2 rounded-lg bg-blue-500"
-        >
+        <button onClick={claim} className="px-4 py-2 rounded-lg bg-blue-500">
           Claim
         </button>
       </div>
@@ -211,6 +236,7 @@ export default function Earn({
         <p>Rewards: {earned} MTK</p>
         <p>Total Pool: {totalStaked} MTK</p>
       </div>
+
     </div>
   );
 }

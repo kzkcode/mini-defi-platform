@@ -10,7 +10,7 @@ export default function AppRoutes({
   contract,
   stakingContract,
   signerContract,
-  provider,
+  signerStakingContract,
 }) {
   return (
     <Routes>
@@ -31,22 +31,14 @@ export default function AppRoutes({
         element={
           <Earn
             account={account}
-            contract={contract}
             stakingContract={stakingContract}
-            signerContract={signerContract}
+            stakingWriteContract={signerStakingContract}
+            tokenContract={signerContract}
           />
         }
       />
 
-      <Route
-        path="/trade"
-        element={
-          <Trade
-            account={account}
-            provider={provider}
-          />
-        }
-      />
+      <Route path="/trade" element={<Trade account={account} />} />
 
       <Route path="/history" element={<History />} />
 
