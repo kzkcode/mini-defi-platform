@@ -6,19 +6,27 @@ import AppRoutes from "./app/routes";
 
 import tokenAbi from "./contracts/MyToken.json";
 import stakingAbi from "./contracts/Staking.json";
+import ammAbi from "./contracts/AMM.json";
 
 const TOKEN_ADDRESS = import.meta.env.VITE_MYTOKEN_ADDRESS;
 const STAKING_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
+const AMM_ADDRESS = import.meta.env.VITE_AMM_ADDRESS;
 
 function App() {
   const [account, setAccount] = useState(null);
   const [signer, setSigner] = useState(null);
 
+  // ======================
+  // provider
+  // ======================
   const provider = useMemo(() => {
     if (!window.ethereum) return null;
     return new ethers.BrowserProvider(window.ethereum);
   }, []);
 
+  // ======================
+  // wallet connect
+  // ======================
   async function handleConnect() {
     if (!provider) return;
 
@@ -26,15 +34,19 @@ function App() {
     setAccount(accounts[0]);
   }
 
-  // signer取得
+  // ======================
+  // signer
+  // ======================
   useEffect(() => {
     if (!provider || !account) return;
 
     provider.getSigner().then(setSigner);
   }, [provider, account]);
 
-  // READ TOKEN
-  const contract = useMemo(() => {
+  // ======================
+  // READ contracts
+  // ======================
+  const tokenContract = useMemo(() => {
     if (!provider) return null;
 
     return new ethers.Contract(
@@ -44,7 +56,6 @@ function App() {
     );
   }, [provider]);
 
-  // READ STAKING
   const stakingContract = useMemo(() => {
     if (!provider) return null;
 
@@ -55,8 +66,20 @@ function App() {
     );
   }, [provider]);
 
-  // WRITE TOKEN
-  const signerContract = useMemo(() => {
+  const ammContract = useMemo(() => {
+    if (!provider) return null;
+
+    return new ethers.Contract(
+      AMM_ADDRESS,
+      ammAbi.abi,
+      provider
+    );
+  }, [provider]);
+
+  // ======================
+  // WRITE contracts
+  // ======================
+  const tokenWriteContract = useMemo(() => {
     if (!signer) return null;
 
     return new ethers.Contract(
@@ -66,8 +89,7 @@ function App() {
     );
   }, [signer]);
 
-  // WRITE STAKING
-  const signerStakingContract = useMemo(() => {
+  const stakingWriteContract = useMemo(() => {
     if (!signer) return null;
 
     return new ethers.Contract(
@@ -77,14 +99,33 @@ function App() {
     );
   }, [signer]);
 
+  const ammWriteContract = useMemo(() => {
+    if (!signer) return null;
+
+    return new ethers.Contract(
+      AMM_ADDRESS,
+      ammAbi.abi,
+      signer
+    );
+  }, [signer]);
+
+  // ======================
+  // UI
+  // ======================
   return (
     <Layout account={account} onConnect={handleConnect}>
       <AppRoutes
         account={account}
-        contract={contract}
+
+        // READ
+        contract={tokenContract}
         stakingContract={stakingContract}
-        signerContract={signerContract}
-        signerStakingContract={signerStakingContract}
+        ammContract={ammContract}
+
+        // WRITE
+        signerContract={tokenWriteContract}
+        signerStakingContract={stakingWriteContract}
+        signerAmmContract={ammWriteContract}
       />
     </Layout>
   );

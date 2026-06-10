@@ -1,49 +1,188 @@
-export default function Trade() {
+import { useEffect, useState, useMemo } from "react";
+import { ethers } from "ethers";
+
+export default function Trade({
+  account,
+  ammContract,
+  ammWriteContract,
+  tokenContract,
+}) {
+  const [tab, setTab] = useState("Swap");
+
+  const [amountIn, setAmountIn] = useState("");
+  const [reserveToken, setReserveToken] = useState("0");
+  const [reserveETH, setReserveETH] = useState("0");
+
+  const [status, setStatus] = useState("");
+
+  // =========================
+  // DEBUG
+  // =========================
+  useEffect(() => {
+    console.log("=== TRADE DEBUG ===");
+    console.log("account:", account);
+    console.log("ammContract:", ammContract);
+    console.log("ammWriteContract:", ammWriteContract);
+    console.log("tokenContract:", tokenContract);
+  }, [account, ammContract, ammWriteContract, tokenContract]);
+
+  // =========================
+  // POOL READ
+  // =========================
+  useEffect(() => {
+    if (!ammContract) return;
+
+    let alive = true;
+
+    const load = async () => {
+      try {
+        const rToken = await ammContract.reserveToken();
+        const rETH = await ammContract.reserveETH();
+
+        if (!alive) return;
+
+        setReserveToken(ethers.formatEther(rToken));
+        setReserveETH(ethers.formatEther(rETH));
+      } catch (e) {
+        console.error("POOL ERROR:", e);
+      }
+    };
+
+    load();
+    const id = setInterval(load, 5000);
+
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [ammContract]);
+
+  // =========================
+  // 見積もり
+  // =========================
+  const estimatedOut = useMemo(() => {
+    if (!amountIn || !reserveToken || !reserveETH) return "";
+
+    try {
+      const x = Number(reserveToken);
+      const y = Number(reserveETH);
+      const dx = Number(amountIn);
+
+      if (x <= 0 || y <= 0 || dx <= 0) return "";
+
+      // constant product AMM
+      const dy = (dx * y) / (x + dx);
+
+      return dy.toFixed(6);
+    } catch (e) {
+      console.error(e);
+      return "";
+    }
+  }, [amountIn, reserveToken, reserveETH]);
+
+  // =========================
+  // SWAP
+  // =========================
+  const swap = async () => {
+    try {
+      if (!ammWriteContract || !tokenContract || !amountIn || !account) return;
+
+      const wei = ethers.parseEther(amountIn);
+
+      const allowance = await tokenContract.allowance(
+        account,
+        ammWriteContract.target
+      );
+
+      if (allowance < wei) {
+        const tx = await tokenContract.approve(
+          ammWriteContract.target,
+          wei
+        );
+        await tx.wait();
+      }
+
+      const tx2 = await ammWriteContract.swapTokenForETH(wei, 0);
+      await tx2.wait();
+
+      setStatus("Swap success");
+      setAmountIn("");
+    } catch (e) {
+      console.error("SWAP ERROR:", e);
+      setStatus("Swap failed");
+    }
+  };
+
+  // =========================
+  // UI
+  // =========================
   return (
     <div className="space-y-6">
 
       <h1 className="text-2xl font-bold">Trade (AMM)</h1>
+
+      {status && (
+        <div className="text-blue-300 text-sm">{status}</div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2">
         {["Swap", "Liquidity", "Remove"].map((t) => (
           <button
             key={t}
-            className="px-4 py-2 rounded-lg bg-white/10"
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-lg ${
+              tab === t ? "bg-white/20" : "bg-white/10"
+            }`}
           >
             {t}
           </button>
         ))}
       </div>
 
-      {/* Swap Box */}
-      <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+      {/* Swap */}
+      {tab === "Swap" && (
+        <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
 
-        <div>
-          <p className="text-sm text-gray-400">From</p>
-          <input className="w-full p-3 bg-black/40 border border-white/10 rounded-lg" defaultValue="500" />
+          <div>
+            <p className="text-sm text-gray-400">From</p>
+            <input
+              className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
+              value={amountIn}
+              onChange={(e) => setAmountIn(e.target.value)}
+              placeholder="0.0 MTK"
+            />
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-400">To (estimated)</p>
+            <input
+              className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
+              value={estimatedOut}
+              disabled
+              placeholder="0.0 ETH"
+            />
+          </div>
+
+          <div className="text-sm text-gray-400 space-y-1">
+            <p>Price Impact: --</p>
+            <p>Min Received: --</p>
+          </div>
+
+          <button
+            onClick={swap}
+            className="w-full py-3 rounded-lg bg-purple-600 font-bold"
+          >
+            Swap
+          </button>
         </div>
-
-        <div>
-          <p className="text-sm text-gray-400">To (estimated)</p>
-          <input className="w-full p-3 bg-black/40 border border-white/10 rounded-lg" defaultValue="0.02045" />
-        </div>
-
-        <div className="text-sm text-gray-400 space-y-1">
-          <p>Price Impact: 0.32%</p>
-          <p>Min Received: 0.02038 ETH</p>
-        </div>
-
-        <button className="w-full py-3 rounded-lg bg-purple-600 font-bold">
-          Swap
-        </button>
-      </div>
+      )}
 
       {/* Pool */}
       <div className="p-5 rounded-xl bg-white/5 border border-white/10">
         <h2 className="font-semibold mb-2">Pool Reserves</h2>
-        <p>DFI: 102,218.30</p>
-        <p>ETH: 4.2225</p>
+        <p>Token: {reserveToken}</p>
+        <p>ETH: {reserveETH}</p>
       </div>
 
     </div>

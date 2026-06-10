@@ -9,8 +9,11 @@ export default function AppRoutes({
   account,
   contract,
   stakingContract,
+  ammContract,
+
   signerContract,
   signerStakingContract,
+  signerAmmContract,
 }) {
   return (
     <Routes>
@@ -38,7 +41,17 @@ export default function AppRoutes({
         }
       />
 
-      <Route path="/trade" element={<Trade account={account} />} />
+      <Route
+        path="/trade"
+        element={
+          <Trade
+            account={account}
+            ammContract={ammContract}
+            ammWriteContract={signerAmmContract}
+            tokenContract={signerContract}
+          />
+        }
+      />
 
       <Route path="/history" element={<History />} />
 
