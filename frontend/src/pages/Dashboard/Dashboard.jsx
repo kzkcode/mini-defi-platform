@@ -3,52 +3,89 @@ import { ethers } from "ethers";
 
 export default function Dashboard({
   account,
-  contract,
+  tokenContract,
   stakingContract,
+  lpTokenContract,
 }) {
   const [balance, setBalance] = useState("0");
   const [staked, setStaked] = useState("0");
   const [rewards, setRewards] = useState("0");
+  const [lpPosition, setLpPosition] = useState("0");
 
   useEffect(() => {
-    async function loadData() {
-      if (!contract || !stakingContract || !account) return;
+    if (
+      !account ||
+      !tokenContract ||
+      !stakingContract ||
+      !lpTokenContract
+    ) {
+      return;
+    }
 
+    let alive = true;
+
+    const loadData = async () => {
       try {
-        // ======================
-        // Wallet Balance (ERC20)
-        // ======================
-        const b = await contract.balanceOf(account);
+        // Wallet
+        const wallet = await tokenContract.balanceOf(account);
+
+        // Stake
+        const stakedAmount =
+          await stakingContract.balances(account);
+
+        // Reward
+        const reward =
+          await stakingContract.earned(account);
+
+        // LP Balance
+        const lp =
+          await lpTokenContract.balanceOf(account);
+
+        if (!alive) return;
 
         setBalance(
-          Number(ethers.formatUnits(b, 18)).toFixed(2)
+          Number(
+            ethers.formatEther(wallet)
+          ).toFixed(2)
         );
-
-        // ======================
-        // Staked Amount
-        // ======================
-        const s = await stakingContract.balances(account);
 
         setStaked(
-          Number(ethers.formatUnits(s, 18)).toFixed(2)
+          Number(
+            ethers.formatEther(stakedAmount)
+          ).toFixed(2)
         );
 
-        // ======================
-        // Pending Rewards
-        // ======================
-        const r = await stakingContract.earned(account);
-
         setRewards(
-          Number(ethers.formatUnits(r, 18)).toFixed(2)
+          Number(
+            ethers.formatEther(reward)
+          ).toFixed(2)
+        );
+
+        setLpPosition(
+          Number(
+            ethers.formatEther(lp)
+          ).toFixed(2)
         );
 
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard load error:", err);
       }
-    }
+    };
 
     loadData();
-  }, [contract, stakingContract, account]);
+
+    const id = setInterval(loadData, 5000);
+
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [
+    account,
+    tokenContract,
+    stakingContract,
+    lpTokenContract,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -57,13 +94,14 @@ export default function Dashboard({
         Dashboard
       </h1>
 
-      {/* Total Value */}
+      {/* Portfolio */}
       <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600">
         <p className="text-sm text-white/80">
           Total Portfolio Value
         </p>
+
         <p className="text-3xl font-bold">
-          $1,240.25
+          --
         </p>
       </div>
 
@@ -74,7 +112,7 @@ export default function Dashboard({
           ["Wallet Balance", `${balance} MTK`],
           ["Staked Amount", `${staked} MTK`],
           ["Pending Rewards", `${rewards} MTK`],
-          ["LP Position Value", "428.60 MTK"],
+          ["LP Position", `${lpPosition} LP`],
         ].map(([title, value]) => (
           <div
             key={title}

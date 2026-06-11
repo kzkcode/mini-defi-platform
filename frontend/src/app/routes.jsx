@@ -7,53 +7,74 @@ import History from "../pages/History/History";
 
 export default function AppRoutes({
   account,
-  contract,
+
+  // READ
+  tokenContract,
   stakingContract,
   ammContract,
+  lpTokenContract,
 
-  signerContract,
-  signerStakingContract,
-  signerAmmContract,
+  // WRITE
+  tokenWriteContract,
+  stakingWriteContract,
+  ammWriteContract,
 }) {
   return (
     <Routes>
 
+      {/* Dashboard */}
       <Route
         path="/"
         element={
           <Dashboard
             account={account}
-            contract={contract}
+            tokenContract={tokenContract}
             stakingContract={stakingContract}
+            ammContract={ammContract}
+            lpTokenContract={lpTokenContract}
           />
         }
       />
 
+      {/* Earn */}
       <Route
         path="/earn"
         element={
           <Earn
             account={account}
             stakingContract={stakingContract}
-            stakingWriteContract={signerStakingContract}
-            tokenContract={signerContract}
+            stakingWriteContract={stakingWriteContract}
+            tokenWriteContract={tokenWriteContract}
           />
         }
       />
 
+      {/* Trade */}
       <Route
         path="/trade"
         element={
           <Trade
             account={account}
             ammContract={ammContract}
-            ammWriteContract={signerAmmContract}
-            tokenContract={signerContract}
+            ammWriteContract={ammWriteContract}
+            tokenWriteContract={tokenWriteContract}
           />
         }
       />
 
-      <Route path="/history" element={<History />} />
+      {/* History */}
+      <Route
+        path="/history"
+        element={
+          <History
+            account={account}
+            tokenContract={tokenContract}
+            stakingContract={stakingContract}
+            ammContract={ammContract}
+            lpTokenContract={lpTokenContract}
+          />
+        }
+      />
 
     </Routes>
   );
