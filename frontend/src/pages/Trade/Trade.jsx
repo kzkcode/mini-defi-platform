@@ -81,11 +81,52 @@ export default function Trade({
   }, [amountIn, reserveToken, reserveETH]);
 
   // =========================
+  // Price Impact
+  // =========================
+  const priceImpact = useMemo(() => {
+    if (!amountIn || !estimatedOut) return "";
+
+    try {
+      const x = Number(reserveToken);
+      const y = Number(reserveETH);
+      const dx = Number(amountIn);
+      const dy = Number(estimatedOut);
+
+      if (x <= 0 || y <= 0 || dx <= 0 || dy <= 0) return "";
+
+      const marketPrice = y / x;
+      const executionPrice = dy / dx;
+
+      const impact =
+        ((marketPrice - executionPrice) / marketPrice) * 100;
+
+      return impact.toFixed(2);
+    } catch (e) {
+      console.error(e);
+      return "";
+    }
+  }, [amountIn, estimatedOut, reserveToken, reserveETH]);
+
+  // =========================
+  // Min Received
+  // =========================
+  const minReceived = useMemo(() => {
+    if (!estimatedOut) return "";
+
+    // 現状はスリッページ0%前提
+    return Number(estimatedOut).toFixed(6);
+
+    // 将来 0.5% にするなら
+    // return (Number(estimatedOut) * 0.995).toFixed(6);
+  }, [estimatedOut]);
+
+  // =========================
   // SWAP
   // =========================
   const swap = async () => {
     try {
-      if (!ammWriteContract || !tokenContract || !amountIn || !account) return;
+      if (!ammWriteContract || !tokenContract || !amountIn || !account)
+        return;
 
       const wei = ethers.parseEther(amountIn);
 
@@ -102,7 +143,11 @@ export default function Trade({
         await tx.wait();
       }
 
-      const tx2 = await ammWriteContract.swapTokenForETH(wei, 0);
+      const tx2 = await ammWriteContract.swapTokenForETH(
+        wei,
+        0
+      );
+
       await tx2.wait();
 
       setStatus("Swap success");
@@ -122,7 +167,9 @@ export default function Trade({
       <h1 className="text-2xl font-bold">Trade (AMM)</h1>
 
       {status && (
-        <div className="text-blue-300 text-sm">{status}</div>
+        <div className="text-blue-300 text-sm">
+          {status}
+        </div>
       )}
 
       {/* Tabs */}
@@ -146,6 +193,7 @@ export default function Trade({
 
           <div>
             <p className="text-sm text-gray-400">From</p>
+
             <input
               className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
               value={amountIn}
@@ -155,7 +203,10 @@ export default function Trade({
           </div>
 
           <div>
-            <p className="text-sm text-gray-400">To (estimated)</p>
+            <p className="text-sm text-gray-400">
+              To (estimated)
+            </p>
+
             <input
               className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
               value={estimatedOut}
@@ -165,8 +216,17 @@ export default function Trade({
           </div>
 
           <div className="text-sm text-gray-400 space-y-1">
-            <p>Price Impact: --</p>
-            <p>Min Received: --</p>
+            <p>
+              Price Impact:{" "}
+              {priceImpact ? `${priceImpact}%` : "--"}
+            </p>
+
+            <p>
+              Min Received:{" "}
+              {minReceived
+                ? `${minReceived} ETH`
+                : "--"}
+            </p>
           </div>
 
           <button
@@ -180,7 +240,10 @@ export default function Trade({
 
       {/* Pool */}
       <div className="p-5 rounded-xl bg-white/5 border border-white/10">
-        <h2 className="font-semibold mb-2">Pool Reserves</h2>
+        <h2 className="font-semibold mb-2">
+          Pool Reserves
+        </h2>
+
         <p>Token: {reserveToken}</p>
         <p>ETH: {reserveETH}</p>
       </div>

@@ -11,6 +11,7 @@ export default function Dashboard({
   const [staked, setStaked] = useState("0");
   const [rewards, setRewards] = useState("0");
   const [lpPosition, setLpPosition] = useState("0");
+  const [totalPortfolio, setTotalPortfolio] = useState("0");
 
   useEffect(() => {
     if (
@@ -43,28 +44,33 @@ export default function Dashboard({
 
         if (!alive) return;
 
-        setBalance(
-          Number(
-            ethers.formatEther(wallet)
-          ).toFixed(2)
+        const walletNum = Number(
+          ethers.formatEther(wallet)
         );
 
-        setStaked(
-          Number(
-            ethers.formatEther(stakedAmount)
-          ).toFixed(2)
+        const stakedNum = Number(
+          ethers.formatEther(stakedAmount)
         );
 
-        setRewards(
-          Number(
-            ethers.formatEther(reward)
-          ).toFixed(2)
+        const rewardNum = Number(
+          ethers.formatEther(reward)
         );
+
+        setBalance(walletNum.toFixed(2));
+
+        setStaked(stakedNum.toFixed(2));
+
+        setRewards(rewardNum.toFixed(2));
 
         setLpPosition(
           Number(
             ethers.formatEther(lp)
           ).toFixed(2)
+        );
+
+        // Total Portfolio (MTK only)
+        setTotalPortfolio(
+          (walletNum + stakedNum + rewardNum).toFixed(2)
         );
 
       } catch (err) {
@@ -101,7 +107,7 @@ export default function Dashboard({
         </p>
 
         <p className="text-3xl font-bold">
-          --
+          {totalPortfolio} MTK
         </p>
       </div>
 
