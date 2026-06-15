@@ -4,8 +4,6 @@ A full-stack Web3 application that demonstrates a unified DeFi experience throug
 
 Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the application integrates multiple smart contracts into a single product-oriented interface deployed on the Sepolia testnet.
 
----
-
 # Screenshots
 
 ## Dashboard
@@ -20,8 +18,6 @@ Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the 
 
 <img src="./screenshots/trade.png" width="400">
 
----
-
 # Concept
 
 Rather than presenting independent smart contract examples, this project is designed as a **mini DeFi platform** where users can:
@@ -33,8 +29,6 @@ Rather than presenting independent smart contract examples, this project is desi
 - Monitor portfolio status
 
 The goal is to recreate the core workflow of a decentralized finance application within a unified user experience.
-
----
 
 # Features
 
@@ -52,8 +46,6 @@ It displays:
 
 Changes made in other sections are reflected here in real time.
 
----
-
 ## Earn
 
 The Earn section allows users to generate yield from idle assets.
@@ -67,8 +59,6 @@ Features include:
 - APY-based staking model
 
 This demonstrates time-based reward accounting implemented entirely on-chain.
-
----
 
 ## Trade
 
@@ -85,8 +75,6 @@ Current functionality includes:
 
 The pricing mechanism follows the constant product formula (x × y = k).
 
----
-
 ## History
 
 The History page provides the foundation for transaction tracking.
@@ -101,8 +89,6 @@ Planned improvements:
 - Event-based transaction history
 - Automatic timeline generation
 - On-chain activity indexing
-
----
 
 # Smart Contracts
 
@@ -129,8 +115,6 @@ Planned improvements:
 - LP token issuance
 - Constant product pricing model
 
----
-
 # Tech Stack
 
 ## Blockchain
@@ -151,8 +135,6 @@ Planned improvements:
 
 - Sepolia Testnet
 
----
-
 # Learning Outcomes
 
 Through this project, I explored:
@@ -166,8 +148,6 @@ Through this project, I explored:
 - LP token economics
 - React state management for Web3 applications
 - Integration of multiple smart contracts into a unified product
-
----
 
 # Future Improvements
 

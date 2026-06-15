@@ -11,6 +11,7 @@ export default function Earn({
   const [staked, setStaked] = useState("0");
   const [earned, setEarned] = useState("0");
   const [rewardRate, setRewardRate] = useState("0");
+  const [apr, setApr] = useState("0.00");
   const [totalStaked, setTotalStaked] = useState("0");
   const [status, setStatus] = useState("");
 
@@ -30,6 +31,17 @@ export default function Earn({
       setEarned(ethers.formatEther(earnedValue));
       setRewardRate(ethers.formatEther(rateValue));
       setTotalStaked(ethers.formatEther(totalValue));
+
+      // APR calculation
+      const rewardRatePerSec = Number(ethers.formatEther(rateValue));
+      const totalStakedNum = Number(ethers.formatEther(totalValue));
+
+      const aprValue =
+        totalStakedNum > 0
+          ? (rewardRatePerSec * 365 * 24 * 60 * 60 * 100) / totalStakedNum
+          : 0;
+
+      setApr(aprValue.toFixed(2));
 
     } catch (err) {
       console.error("fetch error:", err);
@@ -54,22 +66,34 @@ export default function Earn({
         setEarned(ethers.formatEther(earnedValue));
         setRewardRate(ethers.formatEther(rateValue));
         setTotalStaked(ethers.formatEther(totalValue));
+
+        // APR calculation
+        const rewardRatePerSec = Number(ethers.formatEther(rateValue));
+        const totalStakedNum = Number(ethers.formatEther(totalValue));
+
+        const aprValue =
+          totalStakedNum > 0
+            ? (rewardRatePerSec * 365 * 24 * 60 * 60 * 100) / totalStakedNum
+            : 0;
+
+        setApr(aprValue.toFixed(2));
+
       } catch (err) {
         console.error("fetch error:", err);
       }
     };
 
-    // 初回ロード（OK）
+    // 初回ロード
     load();
 
-  // interval
-  const interval = setInterval(load, 5000);
+    // interval
+    const interval = setInterval(load, 5000);
 
-  return () => {
-    alive = false;
-    clearInterval(interval);
-  };
-}, [stakingContract, account]);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
+  }, [stakingContract, account]);
 
   // ========================
   // STAKE
@@ -116,6 +140,7 @@ export default function Earn({
 
       console.log("stake done");
       setStatus("Success");
+      fetchData();
 
     } catch (e) {
       console.error("STAKE ERROR:", e);
@@ -189,7 +214,7 @@ export default function Earn({
         <p className="text-sm text-gray-400">Staking Overview</p>
 
         <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>APR: --</div>
+          <div>APR: {apr}%</div>
           <div>Total Staked: {totalStaked} MTK</div>
           <div>Reward Rate: {rewardRate} / sec</div>
         </div>
