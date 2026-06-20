@@ -5,13 +5,17 @@ export default function Trade({
   account,
   ammContract,
   ammWriteContract,
-  tokenContract,
+  tokenWriteContract,
 }) {
   const [tab, setTab] = useState("Swap");
 
   const [amountIn, setAmountIn] = useState("");
   const [reserveToken, setReserveToken] = useState("0");
   const [reserveETH, setReserveETH] = useState("0");
+  const [liquidityToken, setLiquidityToken] = useState("");
+  const [lpAmount, setLpAmount] = useState("");
+  const [reserveTokenWei, setReserveTokenWei] = useState(0n);
+  const [reserveETHWei, setReserveETHWei] = useState(0n);
 
   const [status, setStatus] = useState("");
 
@@ -23,8 +27,8 @@ export default function Trade({
     console.log("account:", account);
     console.log("ammContract:", ammContract);
     console.log("ammWriteContract:", ammWriteContract);
-    console.log("tokenContract:", tokenContract);
-  }, [account, ammContract, ammWriteContract, tokenContract]);
+    console.log("tokenWriteContract:", tokenWriteContract);
+  }, [account, ammContract, ammWriteContract, tokenWriteContract]);
 
   // =========================
   // POOL READ
@@ -40,6 +44,9 @@ export default function Trade({
         const rETH = await ammContract.reserveETH();
 
         if (!alive) return;
+
+        setReserveTokenWei(rToken);
+        setReserveETHWei(rETH);
 
         setReserveToken(ethers.formatEther(rToken));
         setReserveETH(ethers.formatEther(rETH));
@@ -121,22 +128,41 @@ export default function Trade({
   }, [estimatedOut]);
 
   // =========================
+  // Liquidity ETH estimate
+  // =========================
+  const estimatedLiquidityETH = useMemo(() => {
+    if (!liquidityToken) return "";
+
+    try {
+      const tokenWei = ethers.parseEther(liquidityToken);
+
+      const ethWei =
+        reserveETHWei * tokenWei / reserveTokenWei;
+
+      return ethers.formatEther(ethWei);
+
+    } catch {
+      return "";
+    }
+  }, [liquidityToken, reserveTokenWei, reserveETHWei]);
+
+  // =========================
   // SWAP
   // =========================
   const swap = async () => {
     try {
-      if (!ammWriteContract || !tokenContract || !amountIn || !account)
+      if (!ammWriteContract || !tokenWriteContract || !amountIn || !account)
         return;
 
       const wei = ethers.parseEther(amountIn);
 
-      const allowance = await tokenContract.allowance(
+      const allowance = await tokenWriteContract.allowance(
         account,
         ammWriteContract.target
       );
 
       if (allowance < wei) {
-        const tx = await tokenContract.approve(
+        const tx = await tokenWriteContract.approve(
           ammWriteContract.target,
           wei
         );
@@ -155,6 +181,78 @@ export default function Trade({
     } catch (e) {
       console.error("SWAP ERROR:", e);
       setStatus("Swap failed");
+    }
+  };
+
+  const addLiquidity = async () => {
+    try {
+      if (
+        !ammWriteContract ||
+        !tokenWriteContract ||
+        !account ||
+        !liquidityToken ||
+        !estimatedLiquidityETH
+      ) {
+        return;
+      }
+
+      const tokenWei = ethers.parseEther(liquidityToken);
+      const ethWei = ethers.parseEther(estimatedLiquidityETH);
+
+      const allowance = await tokenWriteContract.allowance(
+        account,
+        ammWriteContract.target
+      );
+
+      if (allowance < tokenWei) {
+        const tx = await tokenWriteContract.approve(
+          ammWriteContract.target,
+          tokenWei
+        );
+
+        await tx.wait();
+      }
+
+      const tx = await ammWriteContract.addLiquidity(
+        tokenWei,
+        {
+          value: ethWei,
+        }
+      );
+
+      await tx.wait();
+
+      setStatus("Liquidity added");
+
+      setLiquidityToken("");
+    } catch (e) {
+      console.error("ADD LIQUIDITY ERROR:", e);
+
+      setStatus("Add liquidity failed");
+    }
+  };
+
+  const removeLiquidity = async () => {
+    try {
+      if (!ammWriteContract || !lpAmount) return;
+
+      const lpWei = ethers.parseEther(lpAmount);
+
+      setStatus("Removing liquidity...");
+
+      const tx = await ammWriteContract.removeLiquidity(
+        lpWei
+      );
+
+      await tx.wait();
+
+      setStatus("Liquidity removed");
+
+      setLpAmount("");
+
+    } catch (e) {
+      console.error("REMOVE ERROR:", e);
+      setStatus("Remove liquidity failed");
     }
   };
 
@@ -235,6 +333,74 @@ export default function Trade({
           >
             Swap
           </button>
+        </div>
+      )}
+      {tab === "Liquidity" && (
+        <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+
+          <div>
+            <p className="text-sm text-gray-400">
+              Token Amount
+            </p>
+
+            <input
+              className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
+              value={liquidityToken}
+              onChange={(e) =>
+                setLiquidityToken(e.target.value)
+              }
+              placeholder="0.0 MTK"
+            />
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-400">
+              ETH Amount
+            </p>
+
+            <input
+              className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
+              value={estimatedLiquidityETH}
+              disabled
+              placeholder="0.0 ETH"
+            />
+          </div>
+
+          <button
+            onClick={addLiquidity}
+            className="w-full py-3 rounded-lg bg-green-600 font-bold"
+          >
+            Add Liquidity
+          </button>
+
+        </div>
+      )}
+
+      {tab === "Remove" && (
+        <div className="p-5 rounded-xl bg-white/5 border border-white/10 space-y-4">
+
+          <div>
+            <p className="text-sm text-gray-400">
+              LP Amount
+            </p>
+
+            <input
+              className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
+              value={lpAmount}
+              onChange={(e) =>
+                setLpAmount(e.target.value)
+              }
+              placeholder="0.0 LP"
+            />
+          </div>
+
+          <button
+            onClick={removeLiquidity}
+            className="w-full py-3 rounded-lg bg-red-600 font-bold"
+          >
+            Remove Liquidity
+          </button>
+
         </div>
       )}
 
