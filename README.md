@@ -2,7 +2,7 @@
 
 A full-stack Web3 application that demonstrates a unified DeFi experience through asset management, staking, trading, and liquidity provision.
 
-Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the application integrates multiple smart contracts into a single product-oriented interface deployed on the Sepolia testnet.
+Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the application integrates multiple smart contracts into a unified product-oriented interface running on the Sepolia testnet.
 
 # Screenshots
 
@@ -20,7 +20,7 @@ Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the 
 
 # Concept
 
-Rather than presenting independent smart contract examples, this project is designed as a **mini DeFi platform** where users can:
+Rather than presenting independent smart contract examples, this project is designed as a mini DeFi platform where users can:
 
 - Hold digital assets
 - Earn staking rewards
@@ -66,7 +66,7 @@ The Trade page implements a simplified decentralized exchange using an Automated
 
 Current functionality includes:
 
-- MTK → ETH swap
+- MTK ↔ ETH swaps
 - Liquidity provision
 - Liquidity removal
 - LP token minting and burning
@@ -77,18 +77,7 @@ The pricing mechanism follows the constant product formula (x × y = k).
 
 ## History
 
-The History page provides the foundation for transaction tracking.
-
-Current version:
-
-- History UI implemented
-- Ready for smart contract event integration
-
-Planned improvements:
-
-- Event-based transaction history
-- Automatic timeline generation
-- On-chain activity indexing
+The History page provides a dedicated interface for transaction tracking.
 
 # Smart Contracts
 
@@ -135,26 +124,8 @@ Planned improvements:
 
 - Sepolia Testnet
 
-# Learning Outcomes
-
-Through this project, I explored:
-
-- ERC-20 token implementation
-- Smart contract interaction with Ethers.js
-- MetaMask integration
-- Reward distribution algorithms
-- Automated Market Maker mechanics
-- Liquidity pool management
-- LP token economics
-- React state management for Web3 applications
-- Integration of multiple smart contracts into a unified product
-
 # Future Improvements
 
 - Event-based transaction history
-- Slippage tolerance settings
-- Bidirectional token swapping (MTK ↔ ETH)
-- Portfolio valuation in USD
-- Price impact calculation refinement
-- Responsive mobile optimization
-- Comprehensive Hardhat test suite
+- USD portfolio valuation
+- Configurable slippage tolerance
