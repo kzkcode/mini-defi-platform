@@ -16,6 +16,7 @@ export default function Trade({
   const [lpAmount, setLpAmount] = useState("");
   const [reserveTokenWei, setReserveTokenWei] = useState(0n);
   const [reserveETHWei, setReserveETHWei] = useState(0n);
+  const [direction, setDirection] = useState("TOKEN_TO_ETH");
 
   const [status, setStatus] = useState("");
 
@@ -68,24 +69,42 @@ export default function Trade({
   // 見積もり
   // =========================
   const estimatedOut = useMemo(() => {
-    if (!amountIn || !reserveToken || !reserveETH) return "";
+    if (!amountIn) return "";
 
     try {
-      const x = Number(reserveToken);
-      const y = Number(reserveETH);
+
       const dx = Number(amountIn);
 
-      if (x <= 0 || y <= 0 || dx <= 0) return "";
+      if (direction === "TOKEN_TO_ETH") {
 
-      // constant product AMM
-      const dy = (dx * y) / (x + dx);
+        const x = Number(reserveToken);
+        const y = Number(reserveETH);
 
-      return dy.toFixed(6);
-    } catch (e) {
-      console.error(e);
+        const dy = (dx * y) / (x + dx);
+
+        return dy.toFixed(6);
+
+      } else {
+
+        const x = Number(reserveETH);
+        const y = Number(reserveToken);
+
+        const dy = (dx * y) / (x + dx);
+
+        return dy.toFixed(6);
+
+      }
+
+    } catch {
       return "";
     }
-  }, [amountIn, reserveToken, reserveETH]);
+
+  }, [
+    amountIn,
+    reserveToken,
+    reserveETH,
+    direction
+  ]);
 
   // =========================
   // Price Impact
@@ -94,8 +113,15 @@ export default function Trade({
     if (!amountIn || !estimatedOut) return "";
 
     try {
-      const x = Number(reserveToken);
-      const y = Number(reserveETH);
+      const x =
+        direction === "TOKEN_TO_ETH"
+          ? Number(reserveToken)
+          : Number(reserveETH);
+
+      const y =
+        direction === "TOKEN_TO_ETH"
+          ? Number(reserveETH)
+          : Number(reserveToken);
       const dx = Number(amountIn);
       const dy = Number(estimatedOut);
 
@@ -112,7 +138,7 @@ export default function Trade({
       console.error(e);
       return "";
     }
-  }, [amountIn, estimatedOut, reserveToken, reserveETH]);
+  }, [amountIn, estimatedOut, reserveToken, reserveETH, direction]);
 
   // =========================
   // Min Received
@@ -151,33 +177,49 @@ export default function Trade({
   // =========================
   const swap = async () => {
     try {
-      if (!ammWriteContract || !tokenWriteContract || !amountIn || !account)
+      if (!ammWriteContract || !amountIn || !account)
         return;
 
       const wei = ethers.parseEther(amountIn);
 
-      const allowance = await tokenWriteContract.allowance(
-        account,
-        ammWriteContract.target
-      );
+      if (direction === "TOKEN_TO_ETH") {
 
-      if (allowance < wei) {
-        const tx = await tokenWriteContract.approve(
-          ammWriteContract.target,
-          wei
+        const allowance = await tokenWriteContract.allowance(
+          account,
+          ammWriteContract.target
         );
-        await tx.wait();
+
+        if (allowance < wei) {
+          const tx = await tokenWriteContract.approve(
+            ammWriteContract.target,
+            wei
+          );
+          await tx.wait();
+        }
+
+        const tx2 = await ammWriteContract.swapTokenForETH(
+          wei,
+          0
+        );
+
+        await tx2.wait();
+
+      } else {
+
+        const tx2 = await ammWriteContract.swapETHForToken(
+          0,
+          {
+            value: wei,
+          }
+        );
+
+        await tx2.wait();
+
       }
-
-      const tx2 = await ammWriteContract.swapTokenForETH(
-        wei,
-        0
-      );
-
-      await tx2.wait();
 
       setStatus("Swap success");
       setAmountIn("");
+
     } catch (e) {
       console.error("SWAP ERROR:", e);
       setStatus("Swap failed");
@@ -296,10 +338,27 @@ export default function Trade({
               className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
               value={amountIn}
               onChange={(e) => setAmountIn(e.target.value)}
-              placeholder="0.0 MTK"
+              placeholder={
+                direction === "TOKEN_TO_ETH"
+                  ? "0.0 MTK"
+                  : "0.0 ETH"
+              }
             />
           </div>
-
+          <div className="flex justify-center">
+            <button
+              onClick={() =>
+                setDirection(
+                  direction === "TOKEN_TO_ETH"
+                    ? "ETH_TO_TOKEN"
+                    : "TOKEN_TO_ETH"
+                )
+              }
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20"
+            >
+              ⇅
+            </button>
+          </div>
           <div>
             <p className="text-sm text-gray-400">
               To (estimated)
@@ -309,7 +368,11 @@ export default function Trade({
               className="w-full p-3 bg-black/40 border border-white/10 rounded-lg"
               value={estimatedOut}
               disabled
-              placeholder="0.0 ETH"
+              placeholder={
+                direction === "TOKEN_TO_ETH"
+                  ? "0.0 ETH"
+                  : "0.0 MTK"
+              }
             />
           </div>
 
@@ -320,10 +383,15 @@ export default function Trade({
             </p>
 
             <p>
-              Min Received:{" "}
-              {minReceived
-                ? `${minReceived} ETH`
-                : "--"}
+              Min Received: {
+                minReceived
+                  ? `${minReceived} ${
+                      direction === "TOKEN_TO_ETH"
+                        ? "ETH"
+                        : "MTK"
+                    }`
+                  : "--"
+              }
             </p>
           </div>
 
