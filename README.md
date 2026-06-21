@@ -18,6 +18,10 @@ Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the 
 
 <img src="./screenshots/trade.png" width="400">
 
+## History
+
+<img src="./screenshots/history.png" width="400">
+
 # Concept
 
 Rather than presenting independent smart contract examples, this project is designed as a mini DeFi platform where users can:
