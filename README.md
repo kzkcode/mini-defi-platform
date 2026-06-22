@@ -128,6 +128,41 @@ The History page provides a dedicated interface for transaction tracking.
 
 - Sepolia Testnet
 
+# Setup
+
+## Install Dependencies
+
+```bash
+npm install
+cd frontend
+npm install
+```
+
+## Environment Variables
+
+Create `.env` from `.env.example`.
+
+Create `frontend/.env.local` from `frontend/.env.example`.
+
+## Deploy Smart Contracts
+
+```bash
+npx hardhat run scripts/deploy_token.js --network sepolia
+
+npx hardhat run scripts/deploy_staking.js --network sepolia
+
+npx hardhat run scripts/deploy_amm.js --network sepolia
+
+npx hardhat run scripts/add_liquidity.js --network sepolia
+```
+
+## Run Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
 # Future Improvements
 
 - Event-based transaction history
