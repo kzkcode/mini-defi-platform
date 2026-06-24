@@ -1,5 +1,8 @@
 # Mini DeFi Platform
 
+🔗 Live Demo:
+https://mini-defi-platform.vercel.app
+
 A full-stack Web3 application that demonstrates a unified DeFi experience through asset management, staking, trading, and liquidity provision.
 
 Built with **Solidity, Hardhat, React, Vite, Tailwind CSS, and Ethers.js**, the application integrates multiple smart contracts into a unified product-oriented interface running on the Sepolia testnet.
